@@ -5,10 +5,10 @@ process MAKE_WINDOWS {
     memory '2 GB'
 
     input:
-    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), path(ref)
+    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(ref)
 
     output:
-    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), path(ref), path("${sample_id}.windows.txt"), emit: windows
+    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(ref), path("${sample_id}.windows.txt"), emit: windows
 
     script:
     def window_size = params.window_size
