@@ -12,4 +12,4 @@ results/
 
 # Don't commit real inputs pointing at real data paths --
 # keep only the template in version control.
-samplesheet.csv
+*.csv
