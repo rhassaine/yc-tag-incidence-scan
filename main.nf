@@ -8,7 +8,6 @@
  * for:
  *   - total reads
  *   - total YC tags seen
- *   - reads with >=30bp leading soft-clip
  *   - reads matching the crash-triggering pattern: YC:Z:<nonzero-head>++
  *   - overlap between the above two
  *
@@ -20,7 +19,6 @@ nextflow.enable.dsl=2
 
 params.samplesheet   = null          // CSV: sample_id,file_path,file_type,ref_path
 params.window_size   = 20_000_000    // bp per chunk; smaller = more parallelism
-params.softclip_min  = 30            // bp, matches the original hand-scan threshold
 params.threads       = 4             // samtools threads per chunk task
 params.outdir        = 'results'
 

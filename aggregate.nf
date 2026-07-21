@@ -25,16 +25,14 @@ process AGGREGATE {
     awk -F'\\t' '
       NR==1 { next }
       {
-        total[\$1]      += \$3
-        yc[\$1]          += \$4
-        softclip[\$1]    += \$5
-        crash[\$1]       += \$6
-        crashsoft[\$1]   += \$7
+        total[\$1] += \$3
+        yc[\$1]    += \$4
+        crash[\$1] += \$5
       }
       END {
-        printf "sample_id\\ttotal_reads\\tyc_tags_seen\\tsoftclip_reads\\tcrash_pattern_reads\\tcrash_and_softclip\\n"
+        printf "sample_id\\ttotal_reads\\tyc_tags_seen\\tcrash_pattern_reads\\n"
         for (s in total) {
-          printf "%s\\t%d\\t%d\\t%d\\t%d\\t%d\\n", s, total[s], yc[s], softclip[s], crash[s], crashsoft[s]
+          printf "%s\\t%d\\t%d\\t%d\\n", s, total[s], yc[s], crash[s]
         }
       }
     ' combined.tsv | sort > yc_incidence_per_sample.tsv
@@ -43,19 +41,15 @@ process AGGREGATE {
     awk -F'\\t' '
       NR==1 { next }
       {
-        total      += \$3
-        yc         += \$4
-        softclip   += \$5
-        crash      += \$6
-        crashsoft  += \$7
+        total += \$3
+        yc    += \$4
+        crash += \$5
       }
       END {
         printf "metric\\tvalue\\n"
         printf "total_reads_scanned\\t%d\\n", total+0
         printf "total_yc_tags_seen\\t%d\\n", yc+0
-        printf "total_softclip_reads\\t%d\\n", softclip+0
         printf "total_crash_pattern_reads\\t%d\\n", crash+0
-        printf "total_crash_and_softclip\\t%d\\n", crashsoft+0
         if (yc > 0) {
           rate = crash / yc
           printf "observed_rate_per_yc_tag\\t%.10g\\n", rate
