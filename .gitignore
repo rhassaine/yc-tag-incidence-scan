@@ -10,6 +10,6 @@ results/
 .idea/
 .vscode/
 
-# Don't commit real samplesheets pointing at real data paths --
+# Don't commit real inputs pointing at real data paths --
 # keep only the template in version control.
 samplesheet.csv

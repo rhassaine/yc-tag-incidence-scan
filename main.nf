@@ -14,7 +14,7 @@
  * and reports the observed rate (+ a rule-of-three upper bound if zero found).
  *
  * Params (defaults set in nextflow.config, not here, to avoid drift):
- *   samplesheet, window_size, threads, outdir, samtools_container, base_container
+ *   input, window_size, threads, outdir, samtools_container, base_container
  */
 
 nextflow.enable.dsl=2
@@ -26,12 +26,12 @@ include { AGGREGATE     } from './modules/aggregate.nf'
 
 workflow {
 
-    if( !params.samplesheet )
-        error "Provide --samplesheet path/to/samplesheet.csv"
+    if( !params.input )
+        error "Provide --input path/to/input.csv"
 
     // sample_id,file_path,file_type,ref_path (ref_path may be blank for BAM)
     ch_samples = Channel
-        .fromPath(params.samplesheet)
+        .fromPath(params.input)
         .splitCsv(header: true)
         .map { row ->
             def ref = row.ref_path?.trim() ? file(row.ref_path) : file('NO_FILE')

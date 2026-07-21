@@ -38,7 +38,7 @@ total and reports:
 
 ```bash
 nextflow run main.nf \
-  --samplesheet samplesheet.csv \
+  --input samplesheet.csv \
   --window_size 100000000 \
   --threads 4 \
   --outdir results
