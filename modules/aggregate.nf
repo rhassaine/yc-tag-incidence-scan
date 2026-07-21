@@ -1,5 +1,6 @@
 process AGGREGATE {
     publishDir params.outdir, mode: 'copy'
+    container params.base_container
     cpus 1
     memory '2 GB'
 

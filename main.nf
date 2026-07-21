@@ -9,18 +9,15 @@
  *   - total reads
  *   - total YC tags seen
  *   - reads matching the crash-triggering pattern: YC:Z:<nonzero-head>++
- *   - overlap between the above two
  *
  * Aggregates all chunk-level counts into one genome-wide, cohort-wide total,
  * and reports the observed rate (+ a rule-of-three upper bound if zero found).
+ *
+ * Params (defaults set in nextflow.config, not here, to avoid drift):
+ *   samplesheet, window_size, threads, outdir, samtools_container, base_container
  */
 
 nextflow.enable.dsl=2
-
-params.samplesheet   = null          // CSV: sample_id,file_path,file_type,ref_path
-params.window_size   = 20_000_000    // bp per chunk; smaller = more parallelism
-params.threads       = 4             // samtools threads per chunk task
-params.outdir        = 'results'
 
 include { MAKE_WINDOWS  } from './modules/make_windows.nf'
 include { SCAN_REGION   } from './modules/scan_region.nf'

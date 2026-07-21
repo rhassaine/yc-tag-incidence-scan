@@ -1,5 +1,6 @@
 process SCAN_REGION {
     tag "${sample_id}:${region}"
+    container params.samtools_container
     cpus params.threads
     memory '4 GB'
 

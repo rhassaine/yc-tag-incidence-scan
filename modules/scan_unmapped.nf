@@ -1,5 +1,6 @@
 process SCAN_UNMAPPED {
     tag "${sample_id}:unmapped"
+    container params.samtools_container
     cpus params.threads
     memory '4 GB'
 

@@ -1,5 +1,6 @@
 process MAKE_WINDOWS {
     tag "$sample_id"
+    container params.samtools_container
     cpus 1
     memory '2 GB'
 
