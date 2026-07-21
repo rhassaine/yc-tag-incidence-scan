@@ -5,7 +5,7 @@ process SCAN_REGION {
     memory '4 GB'
 
     input:
-    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), path(ref), val(region)
+    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(ref), val(region)
 
     output:
     tuple val(sample_id), path("${sample_id}.${safe_region(region)}.tsv"), emit: stats

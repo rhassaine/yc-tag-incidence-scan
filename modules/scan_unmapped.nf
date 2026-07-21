@@ -5,7 +5,7 @@ process SCAN_UNMAPPED {
     memory '4 GB'
 
     input:
-    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), path(ref)
+    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(ref)
 
     output:
     tuple val(sample_id), path("${sample_id}.unmapped.tsv"), emit: stats
