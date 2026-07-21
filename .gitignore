@@ -1,0 +1,15 @@
+# Nextflow
+.nextflow/
+.nextflow.log*
+work/
+results/
+
+# Common editor/OS junk
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Don't commit real samplesheets pointing at real data paths --
+# keep only the template in version control.
+samplesheet.csv
