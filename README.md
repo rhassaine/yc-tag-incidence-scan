@@ -24,7 +24,6 @@ For each sample:
    (`SCAN_UNMAPPED`) — full tally, no early exit — for:
    - total reads
    - total YC tags seen
-   - reads with a leading soft-clip ≥ `--softclip_min` bp
    - reads matching the crash pattern (`YC:Z:[0-9]+\+\+`)
    - overlap between the two
 
@@ -40,8 +39,7 @@ total and reports:
 ```bash
 nextflow run main.nf \
   --samplesheet samplesheet.csv \
-  --window_size 20000000 \
-  --softclip_min 30 \
+  --window_size 100000000 \
   --threads 4 \
   --outdir results
 ```
