@@ -2,7 +2,7 @@
 
 Nextflow pipeline to measure the genome-wide incidence of a specific SBX YC
 tag pattern — a non-zero head length paired with a truly empty duplex region
-(e.g. `YC:Z:390++`) — across a cohort of BAM/CRAM files.
+(e.g. `YC:Z:9++`) — across a cohort of BAM/CRAM files.
 
 ## Background
 
