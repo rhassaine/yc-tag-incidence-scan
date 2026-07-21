@@ -25,7 +25,6 @@ For each sample:
    - total reads
    - total YC tags seen
    - reads matching the crash pattern (`YC:Z:[0-9]+\+\+`)
-   - overlap between the two
 
 Across all samples/chunks, `AGGREGATE` sums everything into one cohort-wide
 total and reports:
@@ -51,17 +50,23 @@ here only sets safe process-level defaults.
 ## Samplesheet format
 
 ```csv
-sample_id,file_path,file_type,ref_path
-sample01,/path/to/sample01.bam,bam,
-sample02,/path/to/sample02.cram,cram,/path/to/ref_genome.fasta
+sample_id,file_path,file_type,ref_path,index_path
+sample01,/path/to/sample01.bam,bam,,
+sample02,/path/to/sample02.cram,cram,/path/to/ref_genome.fasta,
+sample03,/path/to/sample03.bam,bam,,/path/to/sample03.bam.bai
 ```
 
 - `file_type`: `bam` or `cram` (case-insensitive)
 - `ref_path`: required for CRAM (needs to match the exact reference the
   file was compressed against — a mismatched reference will cause CRAM
   decode errors, not silent corruption); leave blank for BAM
+- `index_path`: optional. If blank, the pipeline derives the index by
+  appending `.bai`/`.crai` to `file_path`. If provided, that exact path is
+  used instead — recommended on cloud storage (e.g. GCS), where the
+  implicit existence check on a constructed sibling path can be unreliable.
 
-Each input file must already be indexed (`.bai` / `.crai` alongside it).
+Each input file must already be indexed (`.bai` / `.crai`), whether via
+the default sibling location or an explicit `index_path`.
 
 ## Outputs
 

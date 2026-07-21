@@ -29,18 +29,25 @@ workflow {
     if( !params.input )
         error "Provide --input path/to/input.csv"
 
-    // sample_id,file_path,file_type,ref_path (ref_path may be blank for BAM)
+    // sample_id,file_path,file_type,ref_path,index_path
+    // (ref_path may be blank for BAM; index_path is optional -- if blank,
+    // falls back to deriving <file_path>.bai / .crai)
     ch_samples = Channel
         .fromPath(params.input)
         .splitCsv(header: true)
         .map { row ->
-            def ref = row.ref_path?.trim() ? file(row.ref_path) : file('NO_FILE')
-            tuple(row.sample_id, file(row.file_path), row.file_type.trim().toLowerCase(), ref)
+            def ref = row.ref_path?.trim() ? file(row.ref_path, checkIfExists: false) : file('NO_FILE')
+            def explicit_idx = row.index_path?.trim() ? file(row.index_path, checkIfExists: false) : null
+            tuple(row.sample_id, file(row.file_path, checkIfExists: false), row.file_type.trim().toLowerCase(), ref, explicit_idx)
         }
 
-    // derive index file alongside each input, so Nextflow stages it too
-    ch_samples_with_index = ch_samples.map { sample_id, f, type, ref ->
-        def idx = type == 'cram' ? file("${f}.crai") : file("${f}.bai")
+    // use the explicit index if the samplesheet provided one; otherwise fall
+    // back to deriving it by appending .bai/.crai (checkIfExists: false --
+    // the implicit existence check on constructed GCS paths is known to be
+    // unreliable; let staging/samtools surface a real error if the index is
+    // genuinely missing, rather than failing here on a possibly-spurious check)
+    ch_samples_with_index = ch_samples.map { sample_id, f, type, ref, explicit_idx ->
+        def idx = explicit_idx ?: (type == 'cram' ? file("${f}.crai", checkIfExists: false) : file("${f}.bai", checkIfExists: false))
         tuple(sample_id, f, idx, type, ref)
     }
 
