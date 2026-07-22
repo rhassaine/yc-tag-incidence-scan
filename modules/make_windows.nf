@@ -23,8 +23,8 @@ process MAKE_WINDOWS {
       /^@SQ/ {
         sn=""; ln=""
         for (i=1;i<=NF;i++) {
-          if ($i ~ /^SN:/) sn = substr($i,4)
-          if ($i ~ /^LN:/) ln = substr($i,4)
+          if (\$i ~ /^SN:/) sn = substr(\$i,4)
+          if (\$i ~ /^LN:/) ln = substr(\$i,4)
         }
         if (sn!="" && ln!="") print sn, ln
       }
@@ -41,7 +41,7 @@ process MAKE_WINDOWS {
     # becomes one task, just scanning many small contigs together.
     awk -v win=${window_size} -v batch=${params.small_contig_batch} '
       {
-        contig=$1; len=$2
+        contig=\$1; len=\$2
         if (len > win) {
           for (start=1; start<=len; start+=win) {
             end = start+win-1

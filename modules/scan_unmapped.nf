@@ -20,17 +20,17 @@ process SCAN_UNMAPPED {
     {
       total++
       for (i=12; i<=NF; i++) {
-        if ($i ~ /^YC:Z:/) {
+        if (\$i ~ /^YC:Z:/) {
           yc_total++
-          if ($i ~ /^YC:Z:[0-9]+\+\+/) {
+          if (\$i ~ /^YC:Z:[0-9]+\\+\\+/) {
             crash_total++
           }
         }
       }
     }
     END {
-      printf "sample_id\tregion\ttotal_reads\tyc_tags_seen\tcrash_pattern_reads\n"
-      printf "%s\t%s\t%d\t%d\t%d\n", "${sample_id}", "unmapped", total+0, yc_total+0, crash_total+0
+      printf "sample_id\\tregion\\ttotal_reads\\tyc_tags_seen\\tcrash_pattern_reads\\n"
+      printf "%s\\t%s\\t%d\\t%d\\t%d\\n", "${sample_id}", "unmapped", total+0, yc_total+0, crash_total+0
     }' > ${sample_id}.unmapped.tsv
     """
 }
