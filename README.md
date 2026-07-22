@@ -20,6 +20,14 @@ For each sample:
 1. Derives genomic-interval chunks directly from the file's own `@SQ`
    header (`MAKE_WINDOWS`) — automatically covers every contig present
    (autosomes, X/Y, MT, decoys, unplaced), not a hardcoded chromosome list.
+   Contigs larger than `--window_size` are split into multiple chunks;
+   contigs at or below it are **batched together** (`--small_contig_batch`
+   contig names per task, default 200) rather than given one task each —
+   a reference with ALT/HLA/decoy scaffolds can have thousands of extra
+   small contigs, and one task per contig would blow up task count
+   independent of `--window_size` (this is a real failure mode we hit:
+   ~3,400 contigs submitted as ~3,400 near-simultaneous GCP Batch jobs
+   triggered API quota/polling throttling).
 2. Scans each chunk (`SCAN_REGION`) and, separately, all unmapped reads
    (`SCAN_UNMAPPED`) — full tally, no early exit — for:
    - total reads
@@ -39,13 +47,26 @@ total and reports:
 nextflow run main.nf \
   --input samplesheet.csv \
   --window_size 100000000 \
-  --threads 4 \
+  --small_contig_batch 200 \
+  --threads 2 \
   --outdir results
 ```
 
 Resource allocation, executor, and GCP Batch configuration are expected to
 be supplied externally (own execution wrapper/config) — `nextflow.config`
 here only sets safe process-level defaults.
+
+### Params reference
+
+| Param | Default | Meaning |
+|---|---|---|
+| `--input` | *(required)* | Path to the samplesheet CSV |
+| `--window_size` | `100000000` | Max bp per genomic chunk; contigs above this are split into multiple chunks |
+| `--small_contig_batch` | `200` | Contigs at/below `--window_size` are grouped into batches of this many per task, rather than one task each |
+| `--threads` | `2` | `samtools -@` threads per chunk task (decompression isn't usually the bottleneck here — the awk tally is single-threaded regardless) |
+| `--outdir` | `results` | Output directory |
+| `--samtools_container` | `quay.io/biocontainers/samtools:1.22.1--h96c455f_0` | Container for `MAKE_WINDOWS`/`SCAN_REGION`/`SCAN_UNMAPPED` |
+| `--base_container` | `quay.io/biocontainers/gawk:5.1.0--2` | Container for `AGGREGATE` (plain awk, no samtools needed) |
 
 ## Samplesheet format
 
