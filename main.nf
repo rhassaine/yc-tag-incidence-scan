@@ -14,7 +14,8 @@
  * and reports the observed rate (+ a rule-of-three upper bound if zero found).
  *
  * Params (defaults set in nextflow.config, not here, to avoid drift):
- *   input, window_size, threads, outdir, samtools_container, base_container
+ *   input, window_size, small_contig_batch, threads, outdir,
+ *   samtools_container, base_container
  */
 
 nextflow.enable.dsl=2

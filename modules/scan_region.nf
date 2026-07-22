@@ -1,5 +1,5 @@
 process SCAN_REGION {
-    tag "${sample_id}:${region}"
+    tag "${sample_id}:${region.length() > 40 ? region.take(40)+'...' : region}"
     container params.samtools_container
     cpus params.threads
     memory '4 GB'
@@ -8,11 +8,11 @@ process SCAN_REGION {
     tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(ref), val(region)
 
     output:
-    tuple val(sample_id), path("${sample_id}.${safe_region(region)}.tsv"), emit: stats
+    tuple val(sample_id), path("${sample_id}.chunk${task.index}.tsv"), emit: stats
 
     script:
     def ref_flag = (file_type == 'cram') ? "-T ${ref}" : ''
-    def out_name = "${sample_id}.${safe_region(region)}.tsv"
+    def out_name = "${sample_id}.chunk${task.index}.tsv"
     """
     set -euo pipefail
     export LC_ALL=C
@@ -21,23 +21,17 @@ process SCAN_REGION {
     {
       total++
       for (i=12; i<=NF; i++) {
-        if (\$i ~ /^YC:Z:/) {
+        if ($i ~ /^YC:Z:/) {
           yc_total++
-          if (\$i ~ /^YC:Z:[0-9]+\\+\\+/) {
+          if ($i ~ /^YC:Z:[0-9]+\+\+/) {
             crash_total++
           }
         }
       }
     }
     END {
-      printf "sample_id\\tregion\\ttotal_reads\\tyc_tags_seen\\tcrash_pattern_reads\\n"
-      printf "%s\\t%s\\t%d\\t%d\\t%d\\n", "${sample_id}", "${region}", total+0, yc_total+0, crash_total+0
+      printf "sample_id\tregion\ttotal_reads\tyc_tags_seen\tcrash_pattern_reads\n"
+      printf "%s\t%s\t%d\t%d\t%d\n", "${sample_id}", "${region}", total+0, yc_total+0, crash_total+0
     }' > ${out_name}
     """
-}
-
-// region strings like "chr1:1-20000000" aren't safe as bare filename
-// fragments on their own (colons especially); sanitize for the output name.
-def safe_region(String region) {
-    region.replaceAll('[:]', '_')
 }

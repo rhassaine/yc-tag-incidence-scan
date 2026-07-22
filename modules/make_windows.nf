@@ -23,23 +23,39 @@ process MAKE_WINDOWS {
       /^@SQ/ {
         sn=""; ln=""
         for (i=1;i<=NF;i++) {
-          if (\$i ~ /^SN:/) sn = substr(\$i,4)
-          if (\$i ~ /^LN:/) ln = substr(\$i,4)
+          if ($i ~ /^SN:/) sn = substr($i,4)
+          if ($i ~ /^LN:/) ln = substr($i,4)
         }
         if (sn!="" && ln!="") print sn, ln
       }
     ' > contigs.tsv
 
-    # Split each contig into fixed-size windows (last window per contig may
-    # be shorter). One region string per line, e.g. "chr1:1-20000000".
-    awk -v win=${window_size} '
+    # Contigs larger than the window get split into "contig:start-end"
+    # chunks, one per line, as before. Contigs at or below the window size
+    # (e.g. ALT/HLA/decoy scaffolds -- a reference can have thousands of
+    # these, each far smaller than any reasonable window) are NOT given
+    # one task each -- that would blow up task count independent of
+    # --window_size. Instead they're batched into groups of
+    # small_contig_batch contig names per line; samtools view accepts
+    # multiple region arguments in one invocation, so one line still
+    # becomes one task, just scanning many small contigs together.
+    awk -v win=${window_size} -v batch=${params.small_contig_batch} '
       {
-        contig=\$1; len=\$2
-        for (start=1; start<=len; start+=win) {
-          end = start+win-1
-          if (end>len) end=len
-          print contig":"start"-"end
+        contig=$1; len=$2
+        if (len > win) {
+          for (start=1; start<=len; start+=win) {
+            end = start+win-1
+            if (end>len) end=len
+            print contig":"start"-"end
+          }
+        } else {
+          buf = buf (buf=="" ? "" : " ") contig
+          count++
+          if (count>=batch) { print buf; buf=""; count=0 }
         }
+      }
+      END {
+        if (buf!="") print buf
       }
     ' contigs.tsv > ${sample_id}.windows.txt
     """
