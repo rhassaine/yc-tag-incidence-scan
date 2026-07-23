@@ -6,10 +6,12 @@ process AGGREGATE {
 
     input:
     path(tsv_files)
+    path(coord_files)
 
     output:
     path("yc_incidence_summary.tsv")
     path("yc_incidence_per_sample.tsv")
+    path("yc_crash_read_coordinates.tsv")
 
     script:
     """
@@ -73,6 +75,14 @@ process AGGREGATE {
         }
       }
     ' combined.tsv > yc_incidence_summary.tsv
+
+    # Concatenate every chunk's crash-pattern read coordinates (most will
+    # be empty, since the pattern is rare) into one cohort-wide file with
+    # a single header line.
+    {
+      printf "sample_id\\tread_name\\trname\\tpos\\tyc_tag\\n"
+      cat ${coord_files.join(' ')}
+    } > yc_crash_read_coordinates.tsv
 
     cat yc_incidence_summary.tsv
     """

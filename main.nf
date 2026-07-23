@@ -9,6 +9,9 @@
  *   - total reads
  *   - total YC tags seen
  *   - reads matching the crash-triggering pattern: YC:Z:<nonzero-head>++
+ *     (coordinates of matching reads are captured too, via samtools' own
+ *     -e tag-filter expression -- cheap counts stay count-only via -c,
+ *     and only the rare matching reads ever get formatted into text)
  *
  * Aggregates all chunk-level counts into one genome-wide, cohort-wide total,
  * and reports the observed rate (+ a rule-of-three upper bound if zero found).
@@ -75,5 +78,12 @@ workflow {
         .map { sample_id, tsv -> tsv }
         .collect()
 
-    AGGREGATE(ch_all_stats)
+    // 5. same for crash-pattern read coordinates -- collected cohort-wide
+    //    so a read's exact location is recoverable, not just its count
+    ch_all_crash_coords = SCAN_REGION.out.crash_coords
+        .mix(SCAN_UNMAPPED.out.crash_coords)
+        .map { sample_id, tsv -> tsv }
+        .collect()
+
+    AGGREGATE(ch_all_stats, ch_all_crash_coords)
 }
