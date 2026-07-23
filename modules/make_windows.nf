@@ -30,16 +30,24 @@ process MAKE_WINDOWS {
       }
     ' > contigs.tsv
 
-    # Contigs larger than the window get split into "contig:start-end"
-    # chunks, one per line, as before. Contigs at or below the window size
-    # (e.g. ALT/HLA/decoy scaffolds -- a reference can have thousands of
-    # these, each far smaller than any reasonable window) are NOT given
-    # one task each -- that would blow up task count independent of
-    # --window_size. Instead they're batched into groups of
-    # small_contig_batch contig names per line; samtools view accepts
-    # multiple region arguments in one invocation, so one line still
-    # becomes one task, just scanning many small contigs together.
-    awk -v win=${window_size} -v batch=${params.small_contig_batch} '
+    # Three-way split, not two:
+    #  1) Contigs larger than the window -> split into "contig:start-end"
+    #     chunks, one per line, each its own task.
+    #  2) Contigs at/below the window but above small_contig_threshold --
+    #     these are "real" chromosomes that just happen to be under
+    #     window_size (e.g. chr16-22 at a 100Mb window) and each still
+    #     carries a substantial amount of read data. Each gets its own
+    #     dedicated task, unsplit, rather than being lumped in with tiny
+    #     scaffolds -- bundling a real ~50-90Mb chromosome together with
+    #     thousands of KB-scale ALT/HLA/decoy contigs created one task
+    #     that ended up processing far more data than any other task in
+    #     the run, becoming the long-pole straggler for the whole pipeline.
+    #  3) Contigs at/below small_contig_threshold (genuinely tiny
+    #     ALT/HLA/decoy scaffolds -- a reference can have thousands of
+    #     these) -- batched together, small_contig_batch names per line,
+    #     since giving each one its own task blows up task count
+    #     independent of --window_size.
+    awk -v win=${window_size} -v small_thresh=${params.small_contig_threshold} -v batch=${params.small_contig_batch} '
       {
         contig=\$1; len=\$2
         if (len > win) {
@@ -48,6 +56,8 @@ process MAKE_WINDOWS {
             if (end>len) end=len
             print contig":"start"-"end
           }
+        } else if (len > small_thresh) {
+          print contig
         } else {
           buf = buf (buf=="" ? "" : " ") contig
           count++
