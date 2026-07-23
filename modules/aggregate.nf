@@ -22,7 +22,10 @@ process AGGREGATE {
         tail -n +2 "\$f" >> combined.tsv
     done
 
-    # Per-sample rollup
+    # Per-sample rollup. Sort only the data rows (not the header) --
+    # otherwise a sample_id like "S1" can sort ahead of the literal string
+    # "sample_id" (uppercase S < lowercase s in ASCII), pushing the header
+    # out of the first line.
     awk -F'\\t' '
       NR==1 { next }
       {
@@ -31,12 +34,16 @@ process AGGREGATE {
         crash[\$1] += \$5
       }
       END {
-        printf "sample_id\\ttotal_reads\\tyc_tags_seen\\tcrash_pattern_reads\\n"
         for (s in total) {
           printf "%s\\t%d\\t%d\\t%d\\n", s, total[s], yc[s], crash[s]
         }
       }
-    ' combined.tsv | sort > yc_incidence_per_sample.tsv
+    ' combined.tsv | sort > per_sample_data.tsv
+
+    {
+      printf "sample_id\\ttotal_reads\\tyc_tags_seen\\tcrash_pattern_reads\\n"
+      cat per_sample_data.tsv
+    } > yc_incidence_per_sample.tsv
 
     # Cohort-wide totals + observed rate + rule-of-three bound if zero found
     awk -F'\\t' '
