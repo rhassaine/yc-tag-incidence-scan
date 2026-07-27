@@ -40,7 +40,7 @@ workflow {
         .fromPath(params.input)
         .splitCsv(header: true)
         .map { row ->
-            def ref = row.ref_path?.trim() ? file(row.ref_path, checkIfExists: false) : file('NO_FILE')
+            def ref = row.ref_path?.trim() ? file(row.ref_path, checkIfExists: false) : []
             def explicit_idx = row.index_path?.trim() ? file(row.index_path, checkIfExists: false) : null
             tuple(row.sample_id, file(row.file_path, checkIfExists: false), row.file_type.trim().toLowerCase(), ref, explicit_idx)
         }
@@ -62,14 +62,22 @@ workflow {
     ch_regions = MAKE_WINDOWS.out.windows
         .flatMap { sample_id, f, idx, type, ref, windows_file ->
             windows_file.readLines().collect { region ->
-                tuple(sample_id, f, idx, type, ref, region)
+                tuple(sample_id, f, idx, type, region, ref)
             }
         }
 
-    SCAN_REGION(ch_regions)
+    // ref is passed as a separate path input so Nextflow stages it onto
+    // the task VM regardless of executor (same pattern as nf-core modules)
+    SCAN_REGION(
+        ch_regions.map { sample_id, f, idx, type, region, ref -> tuple(sample_id, f, idx, type, region) },
+        ch_regions.map { sample_id, f, idx, type, region, ref -> ref }
+    )
 
     // 3. separately scan unmapped reads per sample (one task per sample)
-    SCAN_UNMAPPED(ch_samples_with_index)
+    SCAN_UNMAPPED(
+        ch_samples_with_index.map { sample_id, f, idx, type, ref -> tuple(sample_id, f, idx, type) },
+        ch_samples_with_index.map { sample_id, f, idx, type, ref -> ref }
+    )
 
     // 4. collect every chunk's stats (mapped-region chunks + unmapped chunk)
     //    and aggregate into one global summary

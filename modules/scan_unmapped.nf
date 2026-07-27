@@ -5,14 +5,15 @@ process SCAN_UNMAPPED {
     memory '4 GB'
 
     input:
-    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(ref)
+    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type)
+    path ref
 
     output:
     tuple val(sample_id), path("${sample_id}.unmapped.tsv"), emit: stats
     tuple val(sample_id), path("${sample_id}.unmapped.crash_coords.tsv"), emit: crash_coords
 
     script:
-    def ref_flag = (file_type == 'cram') ? "-T ${ref}" : ''
+    def ref_flag = ref ? "-T ${ref}" : ''
     """
     set -euo pipefail
     export LC_ALL=C

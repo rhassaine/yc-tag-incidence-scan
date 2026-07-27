@@ -5,14 +5,15 @@ process SCAN_REGION {
     memory '4 GB'
 
     input:
-    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(ref), val(region)
+    tuple val(sample_id), path(bam_or_cram), path(index), val(file_type), val(region)
+    path ref
 
     output:
     tuple val(sample_id), path("${sample_id}.chunk${task.index}.tsv"), emit: stats
     tuple val(sample_id), path("${sample_id}.chunk${task.index}.crash_coords.tsv"), emit: crash_coords
 
     script:
-    def ref_flag = (file_type == 'cram') ? "-T ${ref}" : ''
+    def ref_flag = ref ? "-T ${ref}" : ''
     def out_name = "${sample_id}.chunk${task.index}.tsv"
     def coords_name = "${sample_id}.chunk${task.index}.crash_coords.tsv"
     """
