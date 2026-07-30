@@ -1,8 +1,9 @@
 process SCAN_UNMAPPED {
     tag "${sample_id}:unmapped"
     container params.samtools_container
-    cpus params.threads
-    memory '4 GB'
+    cpus 8
+    memory '16 GB'
+    machineType 'n2-*'
 
     input:
     tuple val(sample_id), path(bam_or_cram), path(index), val(file_type)
@@ -18,10 +19,10 @@ process SCAN_UNMAPPED {
     set -euo pipefail
     export LC_ALL=C
 
-    total_reads=\$(samtools view -c -@ ${params.threads} -f 4 ${ref_flag} ${bam_or_cram})
-    yc_tags_seen=\$(samtools view -c -@ ${params.threads} -f 4 ${ref_flag} ${bam_or_cram} -e '[YC]')
+    total_reads=\$(samtools view -c -@ ${task.cpus} -f 4 ${ref_flag} ${bam_or_cram})
+    yc_tags_seen=\$(samtools view -c -@ ${task.cpus} -f 4 ${ref_flag} ${bam_or_cram} -e '[YC]')
 
-    samtools view -@ ${params.threads} -f 4 ${ref_flag} ${bam_or_cram} \
+    samtools view -@ ${task.cpus} -f 4 ${ref_flag} ${bam_or_cram} \
       -e '[YC] =~ "^[0-9]+\\+\\+"' \
       | awk 'BEGIN{OFS="\\t"} {
           yc_tag=""
